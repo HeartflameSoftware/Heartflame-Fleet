@@ -2,6 +2,7 @@ package dev.heartflame.fleet.packet.senders;
 
 import dev.heartflame.fleet.util.ActionType;
 import org.geysermc.mcprotocollib.network.Session;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatCommandPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundChatPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +19,10 @@ public class BotActions {
 
         switch (actionType) {
             case ALL:
+                log.info("Sending Chat Action packet for all bots.");
 
                 for (Map.Entry<String, Session> entry : activeBots.entrySet()) {
                     Session client = entry.getValue();
-                    log.info("Sending Chat Action packet for: {}", entry.getKey());
 
                     client.send(new ServerboundChatPacket(
                             message, // Message to be sent.
@@ -40,7 +41,7 @@ public class BotActions {
                 String username = randomEntry.getKey();
                 Session client = randomEntry.getValue();
 
-                log.info("Sending Chat Action packet for: {}", username);
+                log.info("Sending Chat Action packet for random bot {}.", username);
                 client.send(new ServerboundChatPacket(
                         message, // Message to be sent.
                         Instant.now().toEpochMilli(), // Message timestamp.
@@ -52,10 +53,10 @@ public class BotActions {
                 break;
 
             case SINGLE:
-                Session singleClient = activeBots.get(ActionType.SINGLE.getUsername());
+                Session singleClient = activeBots.get(actionType.getUsername());
                 if (singleClient != null) {
 
-                    log.info("Sending Chat Action packet for: {}", ActionType.SINGLE.getUsername());
+                    log.info("Sending Chat Action packet for bot {}.", actionType.getUsername());
 
                     singleClient.send(new ServerboundChatPacket(
                             message, // Message to be sent.
@@ -65,6 +66,8 @@ public class BotActions {
                             0, // Offset
                             new BitSet() // Acknowledged messages.
                     ));
+                } else {
+                    log.error("Attempted to send Chat Action packet {} for unknown bot {}!", message, actionType.getUsername());
                 }
                 break;
         }
@@ -74,7 +77,7 @@ public class BotActions {
 
         switch (actionType) {
             case ALL:
-                log.info("Disconnecting all bots from server with reason: {}", reason);
+                log.info("Disconnecting all bots from server with reason {}.", reason);
 
                 for (Map.Entry<String, Session> entry : activeBots.entrySet()) {
                     Session client = entry.getValue();
@@ -88,21 +91,60 @@ public class BotActions {
                 String username = randomEntry.getKey();
                 Session client = randomEntry.getValue();
 
-                log.info("Disconnecting {} from server with reason: {}", username, reason);
+                log.info("Disconnecting random bot {} from server with reason {}.", username, reason);
 
                 client.disconnect(reason);
                 break;
 
             case SINGLE:
-                Session singleClient = activeBots.get(ActionType.SINGLE.getUsername());
+                Session singleClient = activeBots.get(actionType.getUsername());
                 if (singleClient != null) {
 
-                    log.info("Disconnecting {} from server with reason: {}", ActionType.SINGLE.getUsername(), reason);
+                    log.info("Disconnecting bot {} from server with reason {}.", actionType.getUsername(), reason);
 
                     singleClient.disconnect(reason);
+                } else {
+                    log.error("Attempted to disconnect unknown bot {}!", actionType.getUsername());
                 }
 
                 break;
+        }
+    }
+
+    public static void command(String command, ActionType actionType) {
+        switch (actionType) {
+            case ALL:
+                log.info("Running command {} for all bots.", command);
+
+                for (Map.Entry<String, Session> entry : activeBots.entrySet()) {
+                    Session client = entry.getValue();
+
+                    client.send(new ServerboundChatCommandPacket(command));
+                }
+                break;
+
+            case RANDOM:
+                Map.Entry<String, Session> randomEntry = getRandomEntry();
+                Session client = randomEntry.getValue();
+
+                log.info("Executing command {} on random bot {}.", command, randomEntry.getKey());
+                client.send(new ServerboundChatCommandPacket(command));
+
+                break;
+
+            case SINGLE:
+                Session singleClient = activeBots.get(actionType.getUsername());
+                if (singleClient != null) {
+
+                    log.info("Executing command {} on bot {}.", command, actionType.getUsername());
+                    singleClient.send(new ServerboundChatCommandPacket(command));
+
+                } else {
+                    log.error("Attempted to run command {} for unknown bot {}!", command, actionType.getUsername());
+                }
+
+                break;
+
         }
     }
 

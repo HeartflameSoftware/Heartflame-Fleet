@@ -3,7 +3,7 @@ package dev.heartflame.fleet.socket;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.heartflame.fleet.crypto.HCrypto;
 import dev.heartflame.fleet.data.JSONParser;
-import dev.heartflame.fleet.model.internal.HardwareStatisticsModel;
+import dev.heartflame.fleet.model.c2s.C2SStatisticsObject;
 import dev.heartflame.fleet.monitor.SystemMonitorExecutor;
 
 import javax.net.ssl.SSLSocket;
@@ -31,7 +31,8 @@ public class ClientThread extends Thread {
                 try {
                     System.out.println("sending data");
 
-                    HardwareStatisticsModel statistics = SystemMonitorExecutor.gatherData();
+                    C2SStatisticsObject statistics = SystemMonitorExecutor.gatherData();
+                    // todo grab bot data
                     ObjectMapper mapper = new ObjectMapper();
                     String data = mapper.writeValueAsString(statistics);
 
