@@ -1,10 +1,14 @@
 package dev.heartflame.fleet.model.c2s;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-@AllArgsConstructor
 @Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class C2SStatisticsObject {
 
     private double txBytes; // Transmitted bytes per second.

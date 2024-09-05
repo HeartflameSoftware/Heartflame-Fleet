@@ -9,7 +9,7 @@ import org.geysermc.mcprotocollib.protocol.MinecraftProtocol;
 
 public class BotSession {
 
-    public void newSession(String IP, int PORT, String BOT_USERNAME) {
+    public Session newSession(String IP, int PORT, String BOT_USERNAME) {
 
         // Here, we only assign the bot username as there is no other authentication required.
         MinecraftProtocol protocol;
@@ -28,5 +28,7 @@ public class BotSession {
         PacketHandler packetHandler = new PacketHandler(client, BOT_USERNAME);
 
         client.connect();
+
+        return client;
     }
 }

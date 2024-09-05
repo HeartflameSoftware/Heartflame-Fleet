@@ -2,8 +2,7 @@ package dev.heartflame.fleet.monitor.processor;
 
 import dev.heartflame.fleet.data.RollingAvgData;
 import dev.heartflame.fleet.monitor.SystemMonitorExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import dev.heartflame.fleet.util.HLogger;
 
 import javax.management.JMX;
 import javax.management.MBeanServer;
@@ -13,8 +12,6 @@ import java.math.BigDecimal;
 import java.util.concurrent.TimeUnit;
 
 public enum CPUMonitor {;
-
-    private static final Logger log = LoggerFactory.getLogger("Bot Actions");
     private static final String OS_OBJECT_NAME = "java.lang:type=OperatingSystem";
     private static final OperatingSystemMXBean BEAN;
 
@@ -37,7 +34,7 @@ public enum CPUMonitor {;
     @SuppressWarnings("EmptyMethod")
     public static void enableMonitoring() {
         // purposefully empty
-        log.info("Initialising CPU Monitor.");
+        HLogger.debug("Initialising CPU Monitor.");
     }
 
     public static double processorLoad() {

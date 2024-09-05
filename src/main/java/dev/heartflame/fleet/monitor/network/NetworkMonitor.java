@@ -1,6 +1,7 @@
 package dev.heartflame.fleet.monitor.network;
 
 import dev.heartflame.fleet.monitor.SystemMonitorExecutor;
+import dev.heartflame.fleet.util.HLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,8 +16,6 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public enum NetworkMonitor {;
-
-    private static final Logger log = LoggerFactory.getLogger("Network Monitor");
     private static final AtomicReference<Map<String, NetworkInterfaceData>> CURRENT_SYSTEM_NETWORK = new AtomicReference<>();
 
     // ignore virtual adapters, container bridge networks etc.
@@ -38,7 +37,7 @@ public enum NetworkMonitor {;
     public static void enableMonitoring(int pollInterval) {
         // purposefully empty
         POLL_INTERVAL = pollInterval;
-        log.info("Initialising Network Monitor.");
+        HLogger.debug("Initialising Network Monitor.");
     }
 
     public static Map<String, NetworkInterfaceData> networkTotals() {

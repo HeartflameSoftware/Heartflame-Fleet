@@ -6,7 +6,7 @@ public enum ActionType {
     RANDOM,
     SINGLE;
 
-    private String username;
+    private String username = "NONE";
 
     public String getUsername() {
         return username;

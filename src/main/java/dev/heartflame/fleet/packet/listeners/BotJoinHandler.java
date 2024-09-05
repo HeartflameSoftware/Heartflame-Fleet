@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class BotJoinHandler extends SessionAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger("Bot Actions");
+    private static final Logger log = LoggerFactory.getLogger("Bot Packet Handler");
 
     private final String USERNAME;
 
@@ -17,6 +17,6 @@ public class BotJoinHandler extends SessionAdapter {
 
     @Override
     public void connected(ConnectedEvent event) {
-        log.info("{} successfully connected to server.", USERNAME);
+        log.info("Bot {} successfully connected to server.", USERNAME);
     }
 }

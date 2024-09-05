@@ -11,7 +11,6 @@ public class JSONParser {
     private static ObjectMapper mapper = new ObjectMapper();
 
     public static JsonNode read() {
-        System.out.println("Reading JSON Configuration file...");
         try {
             return mapper.readTree(new File("config.json"));
         } catch (IOException error) {
