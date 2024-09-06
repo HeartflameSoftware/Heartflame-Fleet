@@ -2,6 +2,7 @@ package dev.heartflame.fleet.data;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.heartflame.fleet.util.HLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,4 +51,33 @@ public class JSONParser {
     }
 
     public static String fetchEncryptionKeyPath() { return read().get("encryption-key-path").asText(); }
+
+    public static String fetchDataStoragePath() { return read().get("persistent-data-storage-path").asText(); }
+
+    public static void writePersistentDataFile(int interval) {
+        try {
+            String val = String.format("{\"interval\":\"%d\"}", interval);
+
+            File output = new File(fetchDataStoragePath());
+            mapper.writeValue(output, val);
+
+            HLogger.info(String.format("Successfully updated node join interval to [%d]ms.", interval));
+        } catch (IOException error) {
+            HLogger.error(String.format("An error occurred when trying to write persistent node interval data: [%s]", error.getMessage()));
+            error.printStackTrace();
+        }
+    }
+
+    public static int getJoinInterval() {
+        try {
+            JsonNode jsonNode = mapper.readTree(new File(fetchDataStoragePath()));
+
+            return jsonNode.get("interval").asInt();
+        } catch (IOException error) {
+            HLogger.error(String.format("An error occurred when trying to read the persistent data configuration file: [%s]", error.getMessage()));
+            error.printStackTrace();
+        }
+
+        return 10000;
+    }
 }

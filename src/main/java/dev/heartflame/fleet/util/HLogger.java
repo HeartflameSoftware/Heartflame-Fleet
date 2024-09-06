@@ -22,7 +22,7 @@ public class HLogger {
 
     public static void warn(String log) {
         synchronized (HLogger.class) {
-            System.out.printf("\u001B[33m" + log + "\u001B[0m");
+            System.out.println("\u001B[33m" + log + "\u001B[0m");
         }
     }
 

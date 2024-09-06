@@ -18,6 +18,7 @@ public class C2SStatisticsObject {
 
     private long usedMemory;
     private long freeMemory;
+    private long totalMemory;
 
     private double usedCPU; // Percentage of CPU usage.
 

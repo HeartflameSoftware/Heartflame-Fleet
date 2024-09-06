@@ -29,6 +29,7 @@ public enum SystemMonitorExecutor {;
 
             long usedMemory = SystemMemoryMonitor.getUsedMemory();
             long freeMemory = SystemMemoryMonitor.getAvailableMemory();
+            long totalMemory = SystemMemoryMonitor.getTotalMemory();
 
             double usedCPU = CPUMonitor.processorLoad10sAvg();
 
@@ -40,7 +41,7 @@ public enum SystemMonitorExecutor {;
             }));
 
             int currentBotCount = BotHandler.activeBots.size();
-            return new C2SStatisticsObject(txBytes.get(), rxBytes.get(), txPackets.get(), rxPackets.get(), usedMemory, freeMemory, usedCPU, currentBotCount, (BotHandler.botCount - currentBotCount));
+            return new C2SStatisticsObject(txBytes.get(), rxBytes.get(), txPackets.get(), rxPackets.get(), usedMemory, freeMemory, totalMemory, usedCPU, currentBotCount, (BotHandler.botCount - currentBotCount));
         });
     }
 

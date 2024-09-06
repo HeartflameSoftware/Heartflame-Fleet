@@ -10,6 +10,7 @@ import dev.heartflame.fleet.model.s2c.S2CActionObject;
 import dev.heartflame.fleet.model.s2c.S2CStressObject;
 import dev.heartflame.fleet.monitor.SystemMonitorExecutor;
 import dev.heartflame.fleet.packet.senders.BotActions;
+import dev.heartflame.fleet.util.ActionType;
 import dev.heartflame.fleet.util.HLogger;
 
 import javax.net.ssl.SSLSocket;
@@ -120,6 +121,17 @@ public class ClientThread extends Thread {
                             case "init":
                                 S2CStressObject stressObject = mapper.readValue(str, S2CStressObject.class);
                                 BotHandler.initialiseBots(stressObject);
+                                break;
+
+                            case "cancel":
+                                BotHandler.cancel = true;
+                                BotActions.disconnect("Stress cancelled.", ActionType.ALL);
+                                break;
+
+                            case "modify_interval":
+                                if (BotHandler.ongoingStress != null) {
+                                    HLogger.debug(String.format("Received instructions to modify stress interval to [%d]", jsonNode.get("interval").asInt()));
+                                }
                                 break;
 
                         }
