@@ -2,7 +2,9 @@ package dev.heartflame.fleet.bot;
 
 import dev.heartflame.fleet.data.JSONParser;
 import dev.heartflame.fleet.model.s2c.S2CStressObject;
+import dev.heartflame.fleet.packet.senders.BotActions;
 import dev.heartflame.fleet.util.HLogger;
+import dev.heartflame.fleet.util.RepeatingAction;
 import org.geysermc.mcprotocollib.network.Session;
 
 import java.nio.file.Files;
@@ -17,48 +19,96 @@ public class BotHandler {
     public static Map<String, Session> activeBots = Collections.synchronizedMap(new ConcurrentHashMap<>());
     public static int botCount = 0;
     public static boolean cancel = false;
+    public static boolean completed = false;
     public static S2CStressObject ongoingStress = null;
 
     public static void initialiseBots(S2CStressObject object) {
-        ongoingStress = object;
-        int joinInterval = getInterval(ongoingStress);
-        HLogger.warn(String.format("Initializing stress test for [%d] Bots @ [%s:%d] with interval [%d]ms.", ongoingStress.getCount(), ongoingStress.getIp(), ongoingStress.getPort(), joinInterval));
+       CompletableFuture.runAsync(() -> {
+           ongoingStress = object;
+           if (object.isOverrideCount()) {
+               botCount = object.getBotCount();
+           } else {
+               botCount = JSONParser.getBotCount();
+           }
 
-        int start = (ongoingStress.getId() - 1) * ongoingStress.getCount() + 1;
-        int end = ongoingStress.getId() * ongoingStress.getCount();
+           int joinInterval = getInterval(ongoingStress);
+           HLogger.warn(String.format("Initializing stress test for [%d] Bots @ [%s:%d] with interval [%d]ms.", botCount, ongoingStress.getIp(), ongoingStress.getPort(), joinInterval));
 
-        botCount = ongoingStress.getCount();
+           for (int i = 1; i <= botCount; i++) {
 
-        for (int i = start; i <= end; i++) {
+               if (cancel) {
+                   HLogger.warn("Detected cancel signal. Terminating stress test.");
+                   cancel();
+                   return;
+               }
 
-            if (cancel) {
-                HLogger.warn("Detected cancel signal. Terminating stress test.");
-                cancel = false;
-                ongoingStress = null;
-                return;
-            }
+               String name = ongoingStress.getNameFormat().replace("%bot_id%", String.valueOf(i)).replace("%node_id%", String.valueOf(ongoingStress.getId()));
+               CompletableFuture.runAsync(() -> {
+                   BotSession session = new BotSession();
+                   Session client = session.newSession(ongoingStress.getIp(), ongoingStress.getPort(), name);
 
-            int botID = i;
-            String name = ongoingStress.getNameFormat().replace("%id%", String.valueOf(botID));
-            CompletableFuture.runAsync(() -> {
-                BotSession session = new BotSession();
-                Session client = session.newSession(ongoingStress.getIp(), ongoingStress.getPort(), name);
+                   activeBots.put(name, client);
+               });
 
-                activeBots.put(name, client);
+               try {
+                   Thread.sleep(getInterval(ongoingStress));
+               } catch (InterruptedException e) {
+                   HLogger.warn("Encountered an exception when sleeping! [" + e.getMessage() + "]");
+               }
+
+           }
+           completed = true;
+           HLogger.debug("Successfully initialized stress test. All bots online.");
+       });
+    }
+
+    public static void continueLoop(int newCount) {
+        CompletableFuture.runAsync(() -> {
+            for (int i = (botCount + 1); i <= newCount; i++) {
+                if (cancel) {
+                    HLogger.warn("Detected cancel signal. Terminating stress test.");
+                    cancel();
+                    return;
+                }
+
+                String name = ongoingStress.getNameFormat().replace("%bot_id%", String.valueOf(i)).replace("%node_id%", String.valueOf(ongoingStress.getId()));
+                CompletableFuture.runAsync(() -> {
+                    BotSession session = new BotSession();
+                    Session client = session.newSession(ongoingStress.getIp(), ongoingStress.getPort(), name);
+
+                    activeBots.put(name, client);
+                });
+
                 try {
-                    Thread.sleep(joinInterval);
+                    Thread.sleep(getInterval(ongoingStress));
                 } catch (InterruptedException e) {
                     HLogger.warn("Encountered an exception when sleeping! [" + e.getMessage() + "]");
                 }
-            });
+            }
+        });
+    }
 
+    private static void cancel() {
+        BotHandler.cancel = false; // Reset the cancel variable
+        BotHandler.botCount = 0; // Reset the total bot count
+        BotHandler.ongoingStress = null; // clear the ongoing stress object
+        BotHandler.completed = false;
+        BotHandler.activeBots.clear(); // empty the active bots map
+
+        for (RepeatingAction task : BotActions.schedules) {
+            HLogger.info("CANCELLING: " + task.getId());
+
+            task.getTask().cancel(false);
+            BotActions.schedules.remove(task);
         }
-        HLogger.debug("Successfully initialized stress test. All bots online.");
     }
 
     private static int getInterval(S2CStressObject object) {
         if (Files.exists(Paths.get(JSONParser.fetchDataStoragePath()))) {
-            return JSONParser.getJoinInterval();
+            int inter = JSONParser.getJoinInterval();
+            if (inter == -1) return object.getInterval();
+
+            return inter;
         } else return object.getInterval();
     }
 }

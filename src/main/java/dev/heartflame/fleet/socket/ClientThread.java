@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.heartflame.fleet.bot.BotHandler;
 import dev.heartflame.fleet.crypto.HCrypto;
 import dev.heartflame.fleet.data.JSONParser;
-import dev.heartflame.fleet.model.c2s.C2SStatisticsObject;
 import dev.heartflame.fleet.model.s2c.S2CActionObject;
 import dev.heartflame.fleet.model.s2c.S2CStressObject;
 import dev.heartflame.fleet.monitor.SystemMonitorExecutor;
@@ -18,7 +17,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +30,6 @@ public class ClientThread extends Thread {
     public ClientThread(SSLSocket socket) {
         try {
             this.socket = socket;
-            System.out.println(socket);
 
             this.dIn = new DataInputStream(socket.getInputStream());
             this.dOut = new DataOutputStream(socket.getOutputStream());
@@ -46,49 +43,19 @@ public class ClientThread extends Thread {
     public void run() {
 
         try {
-            /*ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            executorService.scheduleAtFixedRate(() -> {
-
-                try {
-                    System.out.println("sending data");
-
-                    C2SStatisticsObject statistics = SystemMonitorExecutor.gatherData();
-                    System.out.println(statistics);
-                    // todo grab bot data
-                    ObjectMapper mapper = new ObjectMapper();
-                    String data = mapper.writeValueAsString(statistics);
-                    System.out.println(data);
-
-                    byte[] message = HCrypto.encrypt(data);
-                    System.out.println(message);
-
-                    dOut.writeInt(message.length);
-                    dOut.write(message);
-
-                    System.out.println("sent");
-
-                } catch (IOException e) {
-                    HLogger.error("Error while sending node stats: " + e.getMessage());
-                    e.printStackTrace();
-                }
-
-            }, 0, JSONParser.fetchStatisticInterval(), TimeUnit.SECONDS);*/
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             Runnable task = () -> {
-                System.out.println("RUNNING");
                 SystemMonitorExecutor.gatherData().thenAccept(stats -> {
                     try {
-                        System.out.println("MAPPING");
+
                         ObjectMapper mapper = new ObjectMapper();
                         String data = mapper.writeValueAsString(stats);
-                        System.out.println(data);
 
                         byte[] message = HCrypto.encrypt(data);
 
                         dOut.writeInt(message.length);
                         dOut.write(message);
 
-                        System.out.println("SENT");
                     } catch (IOException error) {
                         error.printStackTrace();
                     }
@@ -115,23 +82,48 @@ public class ClientThread extends Thread {
 
                             case "action":
                                 S2CActionObject actionObject = mapper.readValue(str, S2CActionObject.class);
-                                BotActions.parse(actionObject);
+                                BotActions.preparse(actionObject);
                                 break;
 
                             case "init":
                                 S2CStressObject stressObject = mapper.readValue(str, S2CStressObject.class);
+
+                                if (BotHandler.ongoingStress != null) {
+                                    HLogger.warn("Attempted to start another stress when one is already ongoing!");
+                                    return;
+                                }
                                 BotHandler.initialiseBots(stressObject);
                                 break;
 
                             case "cancel":
-                                BotHandler.cancel = true;
-                                BotActions.disconnect("Stress cancelled.", ActionType.ALL);
-                                break;
+                                synchronized (BotHandler.class) {
+                                    BotHandler.cancel = true;
+                                    BotActions.disconnect("Stress cancelled.", ActionType.ALL, false);
+                                    break;
+                                }
 
                             case "modify_interval":
                                 if (BotHandler.ongoingStress != null) {
                                     HLogger.debug(String.format("Received instructions to modify stress interval to [%d]", jsonNode.get("interval").asInt()));
+                                    JSONParser.writePersistentInterval(jsonNode.get("interval").asInt());
                                 }
+                                break;
+
+                            case "modify_bot_count":
+                                if (BotHandler.ongoingStress != null) {
+                                    HLogger.debug(String.format("Received instructions to modify bot count to [%d]", jsonNode.get("botCount").asInt()));
+                                    if (BotHandler.completed) {
+                                        BotHandler.continueLoop(jsonNode.get("botCount").asInt());
+                                    } else {
+                                        JSONParser.writePersistentBotCount(jsonNode.get("botCount").asInt());
+                                        BotHandler.botCount = jsonNode.get("botCount").asInt();
+                                    }
+
+                                }
+                                break;
+
+                            case "cancel_tasks":
+                                BotActions.cancel(str);
                                 break;
 
                         }

@@ -1,14 +1,10 @@
 package dev.heartflame.fleet.packet.listeners;
 
+import dev.heartflame.fleet.util.HLogger;
 import org.geysermc.mcprotocollib.network.event.session.ConnectedEvent;
 import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class BotJoinHandler extends SessionAdapter {
-
-    private static final Logger log = LoggerFactory.getLogger("Bot Packet Handler");
-
     private final String USERNAME;
 
     public BotJoinHandler(String USERNAME) {
@@ -17,6 +13,6 @@ public class BotJoinHandler extends SessionAdapter {
 
     @Override
     public void connected(ConnectedEvent event) {
-        log.info("Bot {} successfully connected to server.", USERNAME);
+        HLogger.info(String.format("Bot [%s] successfully connected to server.", USERNAME));
     }
 }

@@ -3,10 +3,12 @@ package dev.heartflame.fleet;
 import dev.heartflame.fleet.data.JSONParser;
 import dev.heartflame.fleet.monitor.SystemMonitorExecutor;
 import dev.heartflame.fleet.socket.ClientSocket;
+import dev.heartflame.fleet.util.HLogger;
 
 public class NodeMain {
 
     public static void main(String[] args) {
+
         // Initialise the socket
         new ClientSocket().run();
 

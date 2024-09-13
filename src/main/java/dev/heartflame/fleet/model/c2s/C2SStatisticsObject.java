@@ -25,4 +25,7 @@ public class C2SStatisticsObject {
     private int online; // Amount of online bots
     private int remaining; // Total bots (including scheduled to join) of that node.
 
+    private int configuredBotCount;
+    private int persistentInterval;
+    private String repeatingTaskJSON;
 }
