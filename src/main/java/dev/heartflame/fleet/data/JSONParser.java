@@ -15,14 +15,45 @@ public class JSONParser {
 
     private static ObjectMapper mapper = new ObjectMapper();
 
-    public static String fetchKeystorePassword() {
-        return read().get("keystore-password").asText();
+    
+    public static String fetchEndpoint() {
+        return System.getenv("ENDPOINT") != null ? System.getenv("ENDPOINT") : "localhost";
     }
 
-    public static String fetchEncryptionKeyPath() { return read().get("encryption-key-path").asText(); }
-    
+    public static int fetchSocketPort() {
+        return Integer.parseInt(System.getenv("ENDPOINT_PORT") != null ? System.getenv("ENDPOINT_PORT") : "9999");
+    }
 
-    public static String fetchDataStoragePath() { return read().get("persistent-data-storage-path").asText(); }
+    public static int fetchPrometheusPort() { return Integer.parseInt(System.getenv("PROMETHEUS_PORT") != null ? System.getenv("PROMETHEUS_PORT") : "9900"); }
+
+    public static int fetchStatisticInterval() {
+        return Integer.parseInt(System.getenv("STATISTIC_INTERVAL") != null ? System.getenv("STATISTIC_INTERVAL") : "10");
+    }
+
+    public static String fetchBasePath() {
+        return System.getenv("BASE_PATH") != null ? System.getenv("BASE_PATH") : "/etc/heartflame/";
+    }
+
+    public static String fetchTruststorePath() {
+        return System.getenv("TRUSTSTORE_PATH") != null ? System.getenv("TRUSTSTORE_PATH") : "/etc/heartflame/heartflame.truststore";
+    }
+
+    public static String fetchTruststorePassword() {
+        return System.getenv("TRUSTSTORE_PASSWORD") != null ? System.getenv("TRUSTSTORE_PASSWORD") : "password123";
+    }
+
+    public static String fetchKeystorePath() {
+        return System.getenv("KEYSTORE_PATH") != null ? System.getenv("KEYSTORE_PATH") : "/etc/heartflame/heartflame.keystore";
+    }
+
+    public static String fetchKeystorePassword() {
+        return System.getenv("KEYSTORE_PASSWORD") != null ? System.getenv("KEYSTORE_PASSWORD") : "password123";
+    }
+
+    public static String fetchEncryptionKeyPath() { return System.getenv("ENCRYPTION_KEY_PATH") != null ? System.getenv("ENCRYPTION_KEY_PATH") : "/etc/heartflame/aead_keyset.json"; }
+
+
+    public static String fetchDataStoragePath() { return System.getenv("PERSISTENT_DATA_STORAGE_PATH") != null ? System.getenv("PERSISTENT_DATA_STORAGE_PATH") : "/etc/heartflame/data.json"; }
 
     public static void writePersistentInterval(int interval) {
         try {
