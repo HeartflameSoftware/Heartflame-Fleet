@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: heartflame-fleet
-          path: target/heartflame-fleet.jar
+          path: target/backend-1.0-SNAPSHOT.jar
 
 
   docker:

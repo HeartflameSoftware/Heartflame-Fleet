@@ -1,5 +1,5 @@
 # Stage 1
 FROM cgr.dev/chainguard/jre as runtime
 WORKDIR /etc/heartflame
-COPY heartflame-fleet.jar ./heartflame-fleet.jar
+COPY backend-1.0-SNAPSHOT.jar ./heartflame-fleet.jar
 ENTRYPOINT ["java", "-jar", "/etc/heartflame/heartflame-fleet.jar"]
