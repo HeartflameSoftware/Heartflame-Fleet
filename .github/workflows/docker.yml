@@ -3,7 +3,7 @@ name: Chainguard Image Build
 on:
   push:
     branches:
-      - The-Great-Upgradering
+      - main
 
 
 jobs:
