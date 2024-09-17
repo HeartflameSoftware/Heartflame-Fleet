@@ -84,6 +84,11 @@ public class JSONParser {
 
     public static int getJoinInterval() {
         try {
+            if (!Files.exists(Paths.get(fetchDataStoragePath()))) {
+                if (System.getenv("bot_count") == null) return -1;
+                return Integer.valueOf(System.getenv("bot_count"));
+            }
+
             JsonNode jsonNode = mapper.readTree(new File(fetchDataStoragePath()));
 
             if (!jsonNode.has("interval")) return -1;

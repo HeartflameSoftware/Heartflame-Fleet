@@ -24,7 +24,7 @@ public class BotActions {
     public static void preparse(S2CActionObject object) {
         ActionType actionType = toActionType(object);
 
-        /*if (object.isRepeating()) {
+        if (object.isRepeating()) {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
             String interval = object.getInterval();
@@ -34,19 +34,17 @@ public class BotActions {
                 int min = Integer.parseInt(parts[0]);
                 int max = Integer.parseInt(parts[1]);
 
-                schedules.add(new RepeatingAction(UUID.randomUUID().toString().substring(0, 5), interval, actionType, object.getAction(), CompletableFuture.runAsync(() -> {
-                    while (true) {
-                        try {
-                            parse(object, actionType, true);
-                            Thread.sleep(ThreadLocalRandom.current().nextInt(max - min) + min);
-                        } catch (InterruptedException e) {
-                            HLogger.error("Error when scheduling a bot action: " + e.getMessage());
-                            e.printStackTrace();
-                        }
+                schedules.add(new RepeatingAction(UUID.randomUUID().toString().substring(0, 5), service, interval, actionType, object.getAction(), service.scheduleAtFixedRate(() -> {
+                    try {
+                        parse(object, actionType, true);
+                        Thread.sleep(ThreadLocalRandom.current().nextInt(max - min + 1) + min);
+                    } catch (InterruptedException e) {
+                        HLogger.error("Error when scheduling a bot action: " + e.getMessage());
+                        e.printStackTrace();
                     }
-                })));
+                }, 0, min, TimeUnit.MILLISECONDS)));
             } else {
-                schedules.add(new RepeatingAction(UUID.randomUUID().toString().substring(0, 5), interval, actionType, object.getAction(), service.scheduleAtFixedRate(() -> {
+                schedules.add(new RepeatingAction(UUID.randomUUID().toString().substring(0, 5), service, interval, actionType, object.getAction(), service.scheduleAtFixedRate(() -> {
                     try {
                         parse(object, actionType, true);
                         Thread.sleep(Integer.parseInt(interval));
@@ -56,9 +54,9 @@ public class BotActions {
                     }
                 }, 0, 0, TimeUnit.MILLISECONDS)));
             }
-        } else {*/
+        } else {
             parse(object, actionType, false);
-        //}
+        }
     }
 
     public static void parse(S2CActionObject object, ActionType actionType, boolean silent) {
@@ -265,16 +263,12 @@ public class BotActions {
 
                 HLogger.info("Processing task ID: " + task);
 
-                Optional<ScheduledFuture<?>> thisTask = schedules.stream()
-                        .filter(action -> action.getId().equals(task))
-                        .findFirst()
-                        .map(RepeatingAction::getTask);
-
-                if (thisTask.isPresent()) {
-                    HLogger.warn(String.format("Cancelling task with ID of [%s]", task));
-                   HLogger.warn(String.valueOf(thisTask.get().cancel(true)));
-                } else {
-                    HLogger.warn(String.format("Instructed to cancel a task with an ID of [%s] when it does not exist!", task));
+                for (RepeatingAction action : schedules) {
+                    if (action.getId().equals(task)) {
+                        HLogger.warn(String.format("Cancelling task with ID of [%s]", task));
+                        action.getTask().cancel(true);
+                        action.getService().shutdownNow();
+                    }
                 }
             }
         } catch (Exception e) {
