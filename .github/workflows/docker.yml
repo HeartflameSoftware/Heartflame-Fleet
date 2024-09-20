@@ -44,12 +44,12 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }} .
+        run: docker build -t heartflame-fleet:latest .
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: 'ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }}'
+          image-ref: 'heartflame-fleet:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
@@ -60,6 +60,8 @@ jobs:
         with:
           sarif_file: 'trivy-results.sarif'
 
-      - name: Push Docker image to GHCR
+      - name: Tag and Push Docker image to GHCR
         if: success()  # Only push if the Trivy scan succeeds
-        run: docker push ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }}
+        run: |
+          docker tag heartflame-fleet:latest ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }}
+          docker push ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }}
