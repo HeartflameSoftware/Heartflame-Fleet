@@ -70,6 +70,13 @@
             <version>3.0</version>
             <scope>test</scope>
         </dependency>
+<!-- https://mvnrepository.com/artifact/io.netty/netty-codec-http -->
+<dependency>
+    <groupId>io.netty</groupId>
+    <artifactId>netty-codec-http</artifactId>
+    <version>4.2.0.Alpha4</version>
+</dependency>
+             
     </dependencies>
 
     <build>
