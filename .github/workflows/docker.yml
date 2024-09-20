@@ -61,7 +61,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
       - name: Tag and Push Docker image to GHCR
-        if: success()  # Only push if the Trivy scan succeeds
+        if: success()
         run: |
           docker tag heartflame-fleet:latest ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }}
           docker push ghcr.io/heartflamesoftware/heartflame-fleet:${{ github.sha }}
