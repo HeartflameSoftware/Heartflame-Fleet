@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  heartflame-fleet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "Heartflame Fleet"
