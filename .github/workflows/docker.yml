@@ -48,12 +48,12 @@ jobs:
 
       - name: Tag Docker image as latest
         if: github.ref == 'refs/heads/main'
-        run: docker tag heartflame-fleet:${{ github.sha }} heartflame-fleet:latest
+        run: docker tag heartflame-fleet:${{ github.sha }} ghcr.io/heartflamesoftware/heartflame-fleet:latest
 
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@0.20.0
         with:
-          image-ref: 'heartflame-fleet:latest'
+          image-ref: 'heartflame-fleet:${{ github.sha }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
